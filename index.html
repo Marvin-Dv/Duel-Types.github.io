@@ -1,0 +1,634 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Duelo de Tipos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one centered console column. HUD with per-question pips on top, a stage card with the matchup, answer grid below, feedback inside the card. Type colors are fixed game data; UI neutrals are blue-biased slate with one coral accent. */
+:root{
+  --bg:#EBEEF4; --surface:#FFFFFF; --surface-2:#DEE3EC; --ink:#131A2A; --ink-2:#4B5671; --line:#C6CEDD;
+  --accent:#D63A2F; --accent-ink:#FFFFFF;
+  --good:#17783F; --good-bg:#DCF1E4; --bad:#B8312A; --bad-bg:#FADFDC; --miss:#8A5A00; --miss-bg:#F8EBCB;
+  --font-display:'Chakra Petch','Trebuchet MS',system-ui,sans-serif;
+  --font-body:'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1320; --surface:#161D2E; --surface-2:#222B45; --ink:#E8ECF6; --ink-2:#9CA8C4; --line:#2A3452;
+    --accent:#FF6A5C; --accent-ink:#1B0A08;
+    --good:#62D690; --good-bg:#12301F; --bad:#FF8277; --bad-bg:#3B1917; --miss:#F0C15A; --miss-bg:#352B10;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1320; --surface:#161D2E; --surface-2:#222B45; --ink:#E8ECF6; --ink-2:#9CA8C4; --line:#2A3452;
+  --accent:#FF6A5C; --accent-ink:#1B0A08;
+  --good:#62D690; --good-bg:#12301F; --bad:#FF8277; --bad-bg:#3B1917; --miss:#F0C15A; --miss-bg:#352B10;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font-body); font-size:16px; line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:20px 56px;
+}
+button{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.wrap>*{min-width:0}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px;background:none;border:0;padding:0;cursor:pointer;font:700 1.2rem var(--font-display);letter-spacing:.03em}
+.wheel{position:relative;width:34px;height:34px;border-radius:50%;background:var(--wheel);flex:none}
+.wheel::after{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--bg)}
+.btn{font:600 .95rem var(--font-body);padding:11px 18px;border-radius:var(--r);border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--ink-2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover:not(:disabled){filter:brightness(1.07);border-color:var(--accent)}
+.btn.sm{padding:8px 14px;font-size:.88rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.link{background:none;border:0;padding:4px 0;color:var(--ink-2);cursor:pointer;text-decoration:underline;text-underline-offset:3px;font-size:.88rem}
+.link:hover{color:var(--ink)}
+
+/* type badge */
+.tb{display:inline-flex;align-items:center;justify-content:center;background:var(--c);color:var(--on);font:600 .82rem var(--font-display);letter-spacing:.06em;text-transform:uppercase;padding:4px 11px;border-radius:8px;white-space:nowrap}
+.tb.lg{font-size:1.25rem;padding:12px 22px;border-radius:12px;min-width:140px}
+.tb.unk{background:var(--surface-2);color:var(--ink-2)}
+.arrow{width:40px;height:24px;color:var(--ink-2);flex:none}
+.eyebrow{font:600 .74rem var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.hint{color:var(--ink-2);font-size:.88rem;margin:0}
+.h2{font:700 1.15rem var(--font-display);letter-spacing:.03em;margin:0 0 12px}
+
+/* home */
+.hero{display:flex;flex-direction:column;gap:14px}
+h1{font:700 clamp(2.1rem,7vw,3.3rem)/1.02 var(--font-display);margin:0;text-wrap:balance}
+.lede{color:var(--ink-2);max-width:58ch;margin:0}
+.strip{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+.mult{font:700 2.1rem/1 var(--font-display);font-variant-numeric:tabular-nums}
+.cap{color:var(--ink-2);font-size:.9rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+.settings{display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:var(--bg)}
+.seg button{border:0;background:transparent;padding:9px 18px;font-weight:600;cursor:pointer}
+.seg button+button{border-left:1.5px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:.95rem}
+.check input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent);flex:none}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.mode{display:flex;flex-direction:column;gap:10px;text-align:left;padding:16px;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;cursor:pointer;min-width:0}
+.mode:hover{border-color:var(--accent)}
+.mode .prev{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:34px}
+.mode .name{font:700 1.2rem var(--font-display);letter-spacing:.02em}
+.mode .desc{color:var(--ink-2);font-size:.92rem}
+.mode .rec{font:600 .8rem var(--font-display);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin-top:auto}
+.mode .dex,.mon .dex{font:500 .9rem var(--font-display);color:var(--ink-2);letter-spacing:.08em}
+.mini-mult{font:700 1.1rem var(--font-display)}
+
+/* play */
+.hud{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.pips{display:flex;gap:5px;flex:1;min-width:150px}
+.pip{height:8px;flex:1;border-radius:4px;background:var(--surface-2)}
+.pip.ok{background:var(--good)}.pip.no{background:var(--bad)}.pip.part{background:var(--miss)}.pip.cur{background:var(--ink-2)}
+.stats{display:flex;gap:22px}
+.stat small{display:block;font:600 .68rem var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.stat b{font:700 1.35rem/1.1 var(--font-display);font-variant-numeric:tabular-nums}
+.stage{display:flex;flex-direction:column;gap:16px}
+.stage.enter{animation:rise .28s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.qtop{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.prompt{margin:0;font-weight:600;font-size:1.05rem;max-width:60ch}
+.duel{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:4px 0}
+.duel .side{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.mon{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.mon h2{font:700 clamp(1.8rem,6vw,2.5rem)/1.05 var(--font-display);margin:0}
+.types{display:flex;gap:8px;flex-wrap:wrap}
+.opts{display:grid;gap:10px}
+.opts.mult{grid-template-columns:repeat(3,minmax(0,1fr))}
+.opts.types{grid-template-columns:repeat(2,minmax(0,1fr))}
+.opt{position:relative;display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;padding:14px;background:var(--bg);border:1.5px solid var(--line);border-radius:12px;cursor:pointer;min-width:0}
+.opt .big{font:700 1.7rem/1.1 var(--font-display);font-variant-numeric:tabular-nums}
+.opt .sub{font-size:.8rem;color:var(--ink-2);line-height:1.25}
+.opt .k,.topt .k{position:absolute;top:8px;right:10px;font:500 .7rem var(--font-display);color:var(--ink-2)}
+.topt .k{color:var(--on);opacity:.7}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt:disabled{cursor:default;color:var(--ink)}
+.opt.ok{border-color:var(--good);background:var(--good-bg)}
+.opt.no{border-color:var(--bad);background:var(--bad-bg)}
+.opt.dim{opacity:.55}
+.topt{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--c);color:var(--on);border:0;border-radius:12px;padding:18px 16px;font:700 1.1rem var(--font-display);letter-spacing:.05em;text-transform:uppercase;cursor:pointer;min-width:0}
+.topt:hover:not(:disabled){filter:brightness(1.06)}
+.topt:disabled{cursor:default;color:var(--on)}
+.topt .m{background:var(--surface);color:var(--ink);padding:1px 9px;border-radius:8px;font-size:1rem}
+.topt.ok{box-shadow:0 0 0 3px var(--surface),0 0 0 6px var(--good)}
+.topt.no{box-shadow:0 0 0 3px var(--surface),0 0 0 6px var(--bad)}
+.topt.dim{opacity:.5}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.chip{position:relative;display:flex;align-items:center;gap:8px;padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:600 .85rem var(--font-display);letter-spacing:.04em;text-transform:uppercase;cursor:pointer;min-width:0;text-align:left}
+.chip::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--c);flex:none}
+.chip:hover:not(:disabled){border-color:var(--ink-2)}
+.chip:disabled{cursor:default;color:var(--ink)}
+.chip[aria-pressed="true"],.chip[aria-pressed="true"]:disabled{background:var(--c);color:var(--on);border-color:var(--c)}
+.chip[aria-pressed="true"]::before{background:var(--on)}
+.chip .tag{margin-left:auto;font:700 .85rem var(--font-display)}
+.chip[data-state="ok"]{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--good)}
+.chip[data-state="no"]{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--bad)}
+.chip[data-state="miss"]{border-style:dashed;border-color:var(--miss);box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--miss)}
+.chip[data-state="miss"] .tag{color:var(--miss)}
+.actions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.fb{padding:14px 16px;border-radius:12px;background:var(--good-bg)}
+.fb.no{background:var(--bad-bg)}.fb.part{background:var(--miss-bg)}
+.fb h3{margin:0 0 4px;font:700 .95rem var(--font-display);letter-spacing:.08em;text-transform:uppercase;color:var(--good)}
+.fb.no h3{color:var(--bad)}.fb.part h3{color:var(--miss)}
+.fb p{margin:0;line-height:1.9}
+.wt{display:inline-flex;align-items:center;gap:5px;margin-right:6px;white-space:nowrap}
+.wt b{font:700 .9rem var(--font-display)}
+.pts{font:700 .95rem var(--font-display);color:var(--ink-2)}
+.keys{display:none}
+@media (hover:hover) and (pointer:fine){.keys{display:block}}
+
+/* result */
+.score-big{font:700 clamp(3.2rem,14vw,5.2rem)/1 var(--font-display);font-variant-numeric:tabular-nums}
+.grade{font:600 1.15rem var(--font-display);letter-spacing:.03em;margin:0}
+.facts{display:flex;gap:28px;flex-wrap:wrap}
+.newrec{display:inline-block;font:700 .8rem var(--font-display);letter-spacing:.1em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);padding:3px 10px;border-radius:8px}
+.rvlist{list-style:none;margin:0;padding:0}
+.rv{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;padding:12px 0;border-top:1px solid var(--line);align-items:start}
+.rv .mark{font:700 1rem var(--font-display);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--good-bg);color:var(--good)}
+.rv.no .mark{background:var(--bad-bg);color:var(--bad)}
+.rv.part .mark{background:var(--miss-bg);color:var(--miss)}
+.rvb{line-height:1.9;min-width:0}
+.rvb .ar{color:var(--ink-2);margin:0 4px}
+
+/* study */
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px}
+.grp{display:flex;flex-direction:column;gap:12px}
+.grp h3{margin:0;font:700 1.05rem var(--font-display)}
+.line{display:flex;flex-direction:column;gap:6px}
+.line .tags{line-height:2}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:separate;border-spacing:0;font:600 .75rem var(--font-display)}
+th,td{width:30px;min-width:30px;height:30px;padding:0;text-align:center;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+th.col{background:var(--c);color:var(--on);font-size:.68rem}
+th.row{position:sticky;left:0;z-index:1;width:92px;min-width:92px;text-align:left;padding:0 8px;background:var(--c);color:var(--on);text-transform:uppercase;letter-spacing:.04em}
+th.corner{position:sticky;left:0;z-index:2;background:var(--surface);color:var(--ink-2);font-size:.65rem;text-align:left;padding:0 8px;letter-spacing:.04em}
+td.se{background:var(--good-bg);color:var(--good)}
+td.nve{background:var(--bad-bg);color:var(--bad)}
+td.imm{background:var(--ink);color:var(--bg)}
+td.hl{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:5px;font:700 .75rem var(--font-display)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.legal{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:6px;color:var(--ink-2);font-size:.78rem;line-height:1.5}
+.legal p{margin:0;max-width:75ch}
+.legal strong{color:var(--ink);font-weight:600}
+@media (max-width:520px){
+  .opts.mult{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .duel{flex-direction:column;align-items:flex-start}
+  .duel .arrow{transform:rotate(90deg);margin:2px 0 2px 24px}
+  .tb.lg{min-width:120px;font-size:1.1rem}
+  .card{padding:16px}
+  .stats{gap:18px}
+}
+@media (prefers-reduced-motion:reduce){.stage.enter{animation:none}}
+</style>
+
+<div id="app"></div>
+
+<script>
+'use strict';
+
+/* ---------- dados ---------- */
+const T=['normal','fogo','agua','eletrico','planta','gelo','lutador','veneno','terra','voador','psiquico','inseto','pedra','fantasma','dragao','sombrio','aco','fada'];
+const LABEL={normal:'Normal',fogo:'Fogo',agua:'Água',eletrico:'Elétrico',planta:'Planta',gelo:'Gelo',lutador:'Lutador',veneno:'Veneno',terra:'Terra',voador:'Voador',psiquico:'Psíquico',inseto:'Inseto',pedra:'Pedra',fantasma:'Fantasma',dragao:'Dragão',sombrio:'Sombrio',aco:'Aço',fada:'Fada'};
+const COLOR={normal:'#A8A77A',fogo:'#EE8130',agua:'#6390F0',eletrico:'#F7D02C',planta:'#7AC74C',gelo:'#96D9D6',lutador:'#C22E28',veneno:'#A33EA1',terra:'#E2BF65',voador:'#A98FF3',psiquico:'#F95587',inseto:'#A6B91A',pedra:'#B6A136',fantasma:'#735797',dragao:'#6F35FC',sombrio:'#705746',aco:'#B7B7CE',fada:'#D685AD'};
+
+function lum(hex){
+  const c=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4));
+  return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];
+}
+const ON={};
+T.forEach(t=>{const L=lum(COLOR[t]);ON[t]=(1.05/(L+0.05))>=((L+0.05)/(lum('#10151F')+0.05))?'#FFFFFF':'#10151F';});
+
+const C=(se,nve,imm)=>({se,nve,imm});
+const CHART={
+  normal:C([],['pedra','aco'],['fantasma']),
+  fogo:C(['planta','gelo','inseto','aco'],['fogo','agua','pedra','dragao'],[]),
+  agua:C(['fogo','terra','pedra'],['agua','planta','dragao'],[]),
+  eletrico:C(['agua','voador'],['eletrico','planta','dragao'],['terra']),
+  planta:C(['agua','terra','pedra'],['fogo','planta','veneno','voador','inseto','dragao','aco'],[]),
+  gelo:C(['planta','terra','voador','dragao'],['fogo','agua','gelo','aco'],[]),
+  lutador:C(['normal','gelo','pedra','sombrio','aco'],['veneno','voador','psiquico','inseto','fada'],['fantasma']),
+  veneno:C(['planta','fada'],['veneno','terra','pedra','fantasma'],['aco']),
+  terra:C(['fogo','eletrico','veneno','pedra','aco'],['planta','inseto'],['voador']),
+  voador:C(['planta','lutador','inseto'],['eletrico','pedra','aco'],[]),
+  psiquico:C(['lutador','veneno'],['psiquico','aco'],['sombrio']),
+  inseto:C(['planta','psiquico','sombrio'],['fogo','lutador','veneno','voador','fantasma','aco','fada'],[]),
+  pedra:C(['fogo','gelo','voador','inseto'],['lutador','terra','aco'],[]),
+  fantasma:C(['psiquico','fantasma'],['sombrio'],['normal']),
+  dragao:C(['dragao'],['aco'],['fada']),
+  sombrio:C(['psiquico','fantasma'],['lutador','sombrio','fada'],[]),
+  aco:C(['gelo','pedra','fada'],['fogo','agua','eletrico','aco'],[]),
+  fada:C(['lutador','dragao','sombrio'],['fogo','veneno','aco'],[])
+};
+function eff(a,d){const c=CHART[a];return c.se.includes(d)?2:c.nve.includes(d)?0.5:c.imm.includes(d)?0:1;}
+function mult(a,defs){return defs.reduce((m,d)=>m*eff(a,d),1);}
+
+const P=(n,name,...t)=>({n,name,t});
+const POKE=[
+  P(1,'Bulbasaur','planta','veneno'),P(3,'Venusaur','planta','veneno'),P(4,'Charmander','fogo'),P(6,'Charizard','fogo','voador'),
+  P(7,'Squirtle','agua'),P(9,'Blastoise','agua'),P(12,'Butterfree','inseto','voador'),P(18,'Pidgeot','normal','voador'),
+  P(25,'Pikachu','eletrico'),P(26,'Raichu','eletrico'),P(35,'Clefairy','fada'),P(37,'Vulpix','fogo'),
+  P(39,'Jigglypuff','normal','fada'),P(41,'Zubat','veneno','voador'),P(43,'Oddish','planta','veneno'),P(50,'Diglett','terra'),
+  P(52,'Meowth','normal'),P(54,'Psyduck','agua'),P(58,'Growlithe','fogo'),P(63,'Abra','psiquico'),
+  P(66,'Machop','lutador'),P(74,'Geodude','pedra','terra'),P(79,'Slowpoke','agua','psiquico'),P(81,'Magnemite','eletrico','aco'),
+  P(92,'Gastly','fantasma','veneno'),P(94,'Gengar','fantasma','veneno'),P(95,'Onix','pedra','terra'),P(98,'Krabby','agua'),
+  P(104,'Cubone','terra'),P(113,'Chansey','normal'),P(122,'Mr. Mime','psiquico','fada'),P(123,'Scyther','inseto','voador'),
+  P(124,'Jynx','gelo','psiquico'),P(125,'Electabuzz','eletrico'),P(126,'Magmar','fogo'),P(129,'Magikarp','agua'),
+  P(130,'Gyarados','agua','voador'),P(131,'Lapras','agua','gelo'),P(132,'Ditto','normal'),P(133,'Eevee','normal'),
+  P(134,'Vaporeon','agua'),P(135,'Jolteon','eletrico'),P(136,'Flareon','fogo'),P(143,'Snorlax','normal'),
+  P(144,'Articuno','gelo','voador'),P(145,'Zapdos','eletrico','voador'),P(146,'Moltres','fogo','voador'),P(147,'Dratini','dragao'),
+  P(149,'Dragonite','dragao','voador'),P(150,'Mewtwo','psiquico'),P(151,'Mew','psiquico'),P(152,'Chikorita','planta'),
+  P(158,'Totodile','agua'),P(175,'Togepi','fada'),P(181,'Ampharos','eletrico'),P(196,'Espeon','psiquico'),
+  P(197,'Umbreon','sombrio'),P(212,'Scizor','inseto','aco'),P(214,'Heracross','inseto','lutador'),P(227,'Skarmory','aco','voador'),
+  P(248,'Tyranitar','pedra','sombrio'),P(249,'Lugia','psiquico','voador'),P(282,'Gardevoir','psiquico','fada'),P(302,'Sableye','sombrio','fantasma'),
+  P(306,'Aggron','aco','pedra'),P(330,'Flygon','terra','dragao'),P(373,'Salamence','dragao','voador'),P(376,'Metagross','aco','psiquico'),
+  P(384,'Rayquaza','dragao','voador'),P(392,'Infernape','fogo','lutador'),P(395,'Empoleon','agua','aco'),P(445,'Garchomp','dragao','terra'),
+  P(448,'Lucario','lutador','aco'),P(468,'Togekiss','fada','voador'),P(470,'Leafeon','planta'),P(471,'Glaceon','gelo'),
+  P(609,'Chandelure','fantasma','fogo'),P(635,'Hydreigon','sombrio','dragao'),P(658,'Greninja','agua','sombrio'),P(700,'Sylveon','fada'),
+  P(778,'Mimikyu','fantasma','fada')
+];
+const DUALS=(()=>{
+  const m=new Map();
+  POKE.filter(p=>p.t.length===2).forEach(p=>{const k=[...p.t].sort().join('/');if(!m.has(k))m.set(k,{types:p.t,ex:p.name});});
+  return [...m.values()];
+})();
+
+/* ---------- utilidades ---------- */
+const rnd=n=>Math.floor(Math.random()*n);
+const pick=a=>a[rnd(a.length)];
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
+const FMT={0:'0×',0.25:'¼×',0.5:'½×',1:'1×',2:'2×',4:'4×'};
+const fmt=m=>FMT[m];
+const MULTS=[0,0.25,0.5,1,2,4];
+const MLABEL={0:'Sem efeito',0.25:'Muito pouco efetivo',0.5:'Pouco efetivo',1:'Dano normal',2:'Super efetivo',4:'Extremamente efetivo'};
+const ARROW='<svg class="arrow" viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12h32M26 4l10 8-10 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const badge=(t,cls='')=>`<span class="tb ${cls}" style="--c:${COLOR[t]};--on:${ON[t]}">${LABEL[t]}</span>`;
+const dexNo=n=>'Nº '+String(n).padStart(3,'0');
+const abbr=t=>LABEL[t].slice(0,3).toUpperCase();
+
+function weaknessOf(p){
+  const out={};
+  T.forEach(t=>{const m=mult(t,p.t);if(m>1)out[t]=m;});
+  return out;
+}
+function sortedWeak(weak){
+  return Object.entries(weak).sort((a,b)=>b[1]-a[1]||T.indexOf(a[0])-T.indexOf(b[0]));
+}
+const weakTags=weak=>sortedWeak(weak).map(([t,m])=>`<span class="wt">${badge(t)}<b>${fmt(m)}</b></span>`).join('');
+
+/* ---------- geradores de perguntas ---------- */
+const ACCEPT={0:0.5,0.25:0.9,0.5:0.55,1:0.3,2:0.9,4:1};
+function poolFor(diff){
+  return POKE.filter(p=>diff==='facil'?p.t.length===1:diff==='dificil'?p.t.length===2:true);
+}
+function genAtaque(diff,seen){
+  for(let i=0;i<500;i++){
+    const atk=pick(T);
+    const dual=diff==='dificil'||(diff==='medio'&&Math.random()<0.45);
+    let defs,ex=null;
+    if(dual){const d=pick(DUALS);defs=d.types;ex=d.ex;}else defs=[pick(T)];
+    const m=mult(atk,defs);
+    const key='a:'+atk+'>'+defs.join('/');
+    if(seen.has(key))continue;
+    if(Math.random()>ACCEPT[m])continue;
+    seen.add(key);
+    return {kind:'ataque',atk,defs,m,ex,
+      review:`${badge(atk)}<span class="ar">→</span>${defs.map(d=>badge(d)).join(' ')} <b>${fmt(m)}</b>`};
+  }
+  const atk=pick(T),defs=[pick(T)],m=mult(atk,defs);
+  return {kind:'ataque',atk,defs,m,ex:null,review:`${badge(atk)}<span class="ar">→</span>${badge(defs[0])} <b>${fmt(m)}</b>`};
+}
+function pickMon(diff,seen){
+  const pool=shuffle(poolFor(diff));
+  const found=pool.find(p=>!seen.has('p:'+p.n))||pool[0];
+  seen.add('p:'+found.n);
+  return found;
+}
+function genFraquezas(diff,seen){
+  const p=pickMon(diff,seen);
+  const weak=weaknessOf(p);
+  return {kind:'fraquezas',p,weak,
+    review:`<b>${p.name}</b> ${p.t.map(t=>badge(t)).join(' ')}<br>${weakTags(weak)}`};
+}
+function genGolpe(diff,seen){
+  const p=pickMon(diff,seen);
+  const mults={};T.forEach(t=>mults[t]=mult(t,p.t));
+  const best=Math.max(...Object.values(mults));
+  const top=T.filter(t=>mults[t]===best);
+  const correct=pick(top);
+  const lower=shuffle(T.filter(t=>mults[t]<best));
+  const options=shuffle([correct,...lower.slice(0,3)]);
+  return {kind:'golpe',p,mults,best:correct,options,
+    review:`<b>${p.name}</b> ${p.t.map(t=>badge(t)).join(' ')}<br>Mais efetivo: ${badge(correct)} <b>${fmt(best)}</b>`};
+}
+const GEN={ataque:genAtaque,fraquezas:genFraquezas,golpe:genGolpe};
+function buildGame(mode,diff){
+  const seen=new Set();
+  const kinds=mode==='misto'
+    ?shuffle(['ataque','ataque','ataque','ataque','fraquezas','fraquezas','fraquezas','golpe','golpe','golpe'])
+    :Array(10).fill(mode);
+  return kinds.map(k=>GEN[k](diff,seen));
+}
+
+/* ---------- estado e armazenamento ---------- */
+const S={screen:'home',mode:null,diff:'medio',hide:false,qs:[],i:0,score:0,streak:0,bestStreak:0,
+  answered:false,picked:null,sel:new Set(),results:[],study:'fogo',enter:false,focus:null,newRecord:false};
+try{
+  const p=JSON.parse(localStorage.getItem('duelo-tipos:prefs')||'{}');
+  if(['facil','medio','dificil'].includes(p.diff))S.diff=p.diff;
+  S.hide=!!p.hide;
+}catch(e){}
+function savePrefs(){try{localStorage.setItem('duelo-tipos:prefs',JSON.stringify({diff:S.diff,hide:S.hide}));}catch(e){}}
+function getBest(){try{return JSON.parse(localStorage.getItem('duelo-tipos:best')||'{}');}catch(e){return {};}}
+function setBest(o){try{localStorage.setItem('duelo-tipos:best',JSON.stringify(o));}catch(e){}}
+
+document.documentElement.style.setProperty('--wheel',
+  'conic-gradient('+T.map((t,i)=>`${COLOR[t]} ${(i*100/18).toFixed(2)}% ${((i+1)*100/18).toFixed(2)}%`).join(',')+')');
+
+/* ---------- jogo ---------- */
+function start(mode){
+  S.mode=mode;S.qs=buildGame(mode,S.diff);S.i=0;S.score=0;S.streak=0;S.bestStreak=0;
+  S.answered=false;S.picked=null;S.sel=new Set();S.results=[];S.screen='play';S.enter=true;S.newRecord=false;
+  render();window.scrollTo(0,0);
+}
+function finishRound(state,partial){
+  let pts=0;
+  if(state==='ok'){pts=100+10*Math.min(S.streak,5);S.streak++;S.bestStreak=Math.max(S.bestStreak,S.streak);}
+  else if(state==='part'){pts=partial;S.streak=0;}
+  else S.streak=0;
+  S.score+=pts;S.results[S.i]={state,pts};
+}
+function answer(val){
+  if(S.answered||S.screen!=='play')return;
+  const q=S.qs[S.i];
+  const ok=q.kind==='ataque'?Number(val)===q.m:val===q.best;
+  S.picked=val;S.answered=true;
+  finishRound(ok?'ok':'no');
+  S.focus='[data-act="next"]';render();
+}
+function verify(){
+  const q=S.qs[S.i];
+  if(S.answered||S.sel.size===0)return;
+  const total=Object.keys(q.weak).length;
+  let hits=0,wrong=0;
+  S.sel.forEach(t=>{if(q.weak[t])hits++;else wrong++;});
+  S.answered=true;
+  if(hits===total&&wrong===0)finishRound('ok');
+  else{const net=Math.max(0,hits-wrong);finishRound(net>0?'part':'no',Math.round(50*net/total));}
+  S.focus='[data-act="next"]';render();
+}
+function next(){
+  if(S.i+1>=S.qs.length){
+    S.screen='result';
+    const b=getBest(),key=S.mode+':'+S.diff;
+    if(S.score>(b[key]||0)){b[key]=S.score;setBest(b);S.newRecord=true;}
+    render();window.scrollTo(0,0);return;
+  }
+  S.i++;S.answered=false;S.picked=null;S.sel=new Set();S.enter=true;
+  render();window.scrollTo(0,0);
+}
+
+/* ---------- telas ---------- */
+const $app=document.getElementById('app');
+function render(){
+  let html;
+  if(S.screen==='home')html=homeHTML();
+  else if(S.screen==='play')html=playHTML();
+  else if(S.screen==='result')html=resultHTML();
+  else html=studyHTML();
+  $app.innerHTML=`<div class="wrap">${headerHTML()}${html}${legalHTML()}</div>`;
+  if(S.focus){const el=$app.querySelector(S.focus);if(el)el.focus();S.focus=null;}
+  S.enter=false;
+}
+function legalHTML(){
+  return `<footer class="legal">
+    <p><strong>Projeto de fã, gratuito e sem fins lucrativos.</strong> Este site não é afiliado, patrocinado, aprovado nem endossado pela Nintendo, pela Creatures Inc. ou pela GAME FREAK inc.</p>
+    <p>Pokémon, os nomes dos Pokémon e dos tipos e os demais elementos relacionados são marcas registradas e propriedade da Nintendo, Creatures Inc. e GAME FREAK inc. © Nintendo / Creatures Inc. / GAME FREAK inc. Todos os direitos reservados aos seus respectivos titulares.</p>
+    <p>Este jogo não usa imagens, sprites, logotipos, músicas nem outros materiais oficiais. Os nomes são citados apenas para identificar os personagens, com finalidade educativa.</p>
+  </footer>`;
+}
+function headerHTML(){
+  const study=S.screen==='study';
+  return `<header class="top"><button class="brand" data-act="home"><span class="wheel" aria-hidden="true"></span>Duelo de Tipos</button>
+  <button class="btn sm" data-act="${study?'home':'study'}">${study?'Voltar ao jogo':'Estudar tipos'}</button></header>`;
+}
+
+function homeHTML(){
+  const best=getBest();
+  const diffs=[['facil','Fácil'],['medio','Médio'],['dificil','Difícil']];
+  const dd={facil:'Só tipos únicos. Os Pokémon e os defensores têm um tipo só.',
+    medio:'Mistura tipos únicos e duplos.',
+    dificil:'Só tipos duplos. Os multiplicadores 4× e ¼× entram em jogo.'};
+  const modes=[
+    {id:'ataque',name:'Ataque',desc:'Um tipo ataca outro. Qual é o multiplicador de dano?',
+      prev:`${badge('agua')}${ARROW.replace('class="arrow"','class="arrow" style="width:28px;height:18px"')}${badge('fogo')}<span class="mini-mult">?</span>`},
+    {id:'fraquezas',name:'Fraquezas',desc:'Veja um Pokémon e marque todos os tipos que causam dano extra nele.',
+      prev:`<span class="dex">${dexNo(94)}</span><b>Gengar</b>${badge('fantasma')}${badge('veneno')}`},
+    {id:'golpe',name:'Melhor golpe',desc:'Quatro tipos de golpe, só um é o mais efetivo contra o Pokémon.',
+      prev:['eletrico','terra','voador','gelo'].map(t=>badge(t)).join('')},
+    {id:'misto',name:'Treino misto',desc:'Os três modos embaralhados em uma só partida.',
+      prev:'<span class="hint">Ataque · Fraquezas · Melhor golpe</span>'}
+  ];
+  return `
+  <section class="hero">
+    <h1>Duelo de Tipos</h1>
+    <p class="lede">Teste o que você sabe sobre vantagens e fraquezas dos tipos Pokémon. Cada partida tem 10 perguntas, e cada resposta vem com a explicação.</p>
+    <div class="strip" aria-hidden="true">${badge('agua','lg')}${ARROW}${badge('fogo','lg')}<span class="mult">2×</span><span class="cap">Super efetivo</span></div>
+  </section>
+  <section class="card settings">
+    <div class="field"><span class="eyebrow" id="dl">Dificuldade</span>
+      <div class="seg" role="group" aria-labelledby="dl">${diffs.map(([v,l])=>`<button data-act="diff" data-val="${v}" aria-pressed="${S.diff===v}">${l}</button>`).join('')}</div>
+      <p class="hint">${dd[S.diff]}</p></div>
+    <label class="check"><input type="checkbox" id="hide" ${S.hide?'checked':''}><span>Ocultar os tipos do Pokémon nos modos com Pokémon. Você precisa saber quais são.</span></label>
+  </section>
+  <section><h2 class="h2">Escolha um modo</h2>
+    <div class="modes">${modes.map(m=>`<button class="mode" data-act="start" data-val="${m.id}">
+      <span class="prev">${m.prev}</span><span class="name">${m.name}</span><span class="desc">${m.desc}</span>
+      <span class="rec">Recorde: ${best[m.id+':'+S.diff]||'—'}</span></button>`).join('')}</div>
+  </section>`;
+}
+
+function hudHTML(){
+  const pips=S.qs.map((q,i)=>{const r=S.results[i];const c=r?r.state:(i===S.i?'cur':'');return `<span class="pip ${c}"></span>`;}).join('');
+  return `<div class="hud"><div class="pips" role="img" aria-label="Pergunta ${S.i+1} de ${S.qs.length}">${pips}</div>
+  <div class="stats"><div class="stat"><small>Pontos</small><b>${S.score}</b></div><div class="stat"><small>Sequência</small><b>${S.streak}</b></div></div></div>`;
+}
+function monHTML(p){
+  const show=!S.hide||S.answered;
+  return `<div class="mon"><span class="dex">${dexNo(p.n)}</span><h2>${p.name}</h2></div>
+  <div class="types">${show?p.t.map(t=>badge(t)).join(''):'<span class="tb unk">Tipos ocultos</span>'}</div>`;
+}
+function ataqueBody(q){
+  const opts=MULTS.map((m,i)=>{
+    let cls='opt';
+    if(S.answered){if(m===q.m)cls+=' ok';else if(S.picked!==null&&Number(S.picked)===m)cls+=' no';else cls+=' dim';}
+    return `<button class="${cls}" data-act="ans" data-val="${m}" ${S.answered?'disabled':''}><span class="big">${fmt(m)}</span><span class="sub">${MLABEL[m]}</span><span class="k">${i+1}</span></button>`;
+  }).join('');
+  return `<div class="duel"><div class="side"><span class="eyebrow">Golpe</span>${badge(q.atk,'lg')}</div>${ARROW}
+  <div class="side"><span class="eyebrow">Defensor</span>${q.defs.map(d=>badge(d,'lg')).join('')}</div></div>
+  <p class="prompt">Qual é o multiplicador de dano?</p><div class="opts mult">${opts}</div>`;
+}
+function golpeBody(q){
+  const opts=q.options.map((t,i)=>{
+    let cls='topt';
+    if(S.answered){if(t===q.best)cls+=' ok';else if(S.picked===t)cls+=' no';else cls+=' dim';}
+    return `<button class="${cls}" style="--c:${COLOR[t]};--on:${ON[t]}" data-act="ans" data-val="${t}" ${S.answered?'disabled':''}>${LABEL[t]}${S.answered?`<span class="m">${fmt(q.mults[t])}</span>`:`<span class="k">${i+1}</span>`}</button>`;
+  }).join('');
+  return `${monHTML(q.p)}<p class="prompt">Qual tipo de golpe é o mais efetivo contra ${q.p.name}?</p><div class="opts types">${opts}</div>`;
+}
+function fraqBody(q){
+  const n=Object.keys(q.weak).length;
+  const chips=T.map(t=>{
+    const sel=S.sel.has(t),w=q.weak[t];
+    let st='',tag='';
+    if(S.answered){
+      if(sel&&w){st='ok';tag=fmt(w);}else if(sel&&!w){st='no';tag='✕';}else if(!sel&&w){st='miss';tag=fmt(w);}
+    }
+    return `<button class="chip" style="--c:${COLOR[t]};--on:${ON[t]}" data-act="toggle" data-val="${t}" aria-pressed="${sel}" ${st?`data-state="${st}"`:''} ${S.answered?'disabled':''}>${LABEL[t]}${tag?`<span class="tag">${tag}</span>`:''}</button>`;
+  }).join('');
+  const hintN=S.diff==='facil'?` Ele tem ${n} fraqueza${n===1?'':'s'}.`:'';
+  return `${monHTML(q.p)}<p class="prompt">Marque todos os tipos que causam dano extra (2× ou 4×) em ${q.p.name}.${hintN}</p>
+  <div class="chips">${chips}</div>
+  ${S.answered?'':`<div class="actions"><span class="hint">${S.sel.size} selecionado${S.sel.size===1?'':'s'}</span><button class="btn primary" data-act="verify" ${S.sel.size?'':'disabled'}>Verificar</button></div>`}`;
+}
+function explainAtaque(q){
+  const lbl=MLABEL[q.m].toLowerCase();
+  if(q.defs.length===1)return `${badge(q.atk)} contra ${badge(q.defs[0])} dá <b>${fmt(q.m)}</b>: ${lbl}.`;
+  const [a,b]=q.defs;
+  return `${badge(q.atk)} contra ${badge(a)} dá ${fmt(eff(q.atk,a))} e contra ${badge(b)} dá ${fmt(eff(q.atk,b))}. Os efeitos se multiplicam: <b>${fmt(q.m)}</b>, ${lbl}.${q.ex?` Exemplo de Pokémon assim: ${q.ex}.`:''}`;
+}
+function feedbackHTML(q,last){
+  const r=S.results[S.i];
+  let head,txt;
+  if(q.kind==='ataque'){
+    head=r.state==='ok'?'Correto':'Não foi dessa vez';
+    txt=explainAtaque(q);
+  }else if(q.kind==='golpe'){
+    head=r.state==='ok'?'Correto':'Não foi dessa vez';
+    txt=`O mais efetivo contra <b>${q.p.name}</b> era ${badge(q.best)} <b>${fmt(q.mults[q.best])}</b>.<br>Fraquezas de ${q.p.name}: ${weakTags(weaknessOf(q.p))}`;
+  }else{
+    const total=Object.keys(q.weak).length;
+    let hits=0;S.sel.forEach(t=>{if(q.weak[t])hits++;});
+    head=r.state==='ok'?'Perfeito':r.state==='part'?`Quase: ${hits} de ${total}`:'Não foi dessa vez';
+    txt=`<b>${q.p.name}</b> (${q.p.t.map(t=>LABEL[t]).join(' / ')}) é fraco contra:<br>${weakTags(q.weak)}`;
+  }
+  return `<div class="fb ${r.state}"><h3>${head}</h3><p>${txt}</p></div>
+  <div class="actions"><span class="pts">${r.pts?'+'+r.pts+' pontos':'Sem pontos nesta rodada'}</span>
+  <button class="btn primary" data-act="next">${last?'Ver resultado':'Próxima pergunta'}</button></div>`;
+}
+function playHTML(){
+  const q=S.qs[S.i],last=S.i+1===S.qs.length;
+  const mn={ataque:'Ataque',fraquezas:'Fraquezas',golpe:'Melhor golpe'}[q.kind];
+  const body=q.kind==='ataque'?ataqueBody(q):q.kind==='fraquezas'?fraqBody(q):golpeBody(q);
+  const keys=!S.answered&&q.kind!=='fraquezas'?`<p class="hint keys">Atalhos: teclas ${q.kind==='ataque'?'1 a 6':'1 a 4'} respondem e Enter avança.</p>`:'';
+  return `${hudHTML()}
+  <section class="card stage${S.enter?' enter':''}">
+    <div class="qtop"><span class="eyebrow">Pergunta ${S.i+1} de ${S.qs.length} · ${mn}</span><button class="link" data-act="home">Sair</button></div>
+    ${body}${keys}
+    <div id="fb" role="status">${S.answered?feedbackHTML(q,last):''}</div>
+  </section>`;
+}
+
+function resultHTML(){
+  const n=S.qs.length,ok=S.results.filter(r=>r.state==='ok').length;
+  const grade=ok===n?'Campeão da liga':ok>=8?'Elite dos quatro':ok>=6?'Líder de ginásio':ok>=4?'Treinador de rota':'Treinador iniciante';
+  const rows=S.qs.map((q,i)=>{
+    const r=S.results[i]||{state:'no',pts:0};
+    return `<li class="rv ${r.state}"><span class="mark" aria-label="${r.state==='ok'?'Acertou':r.state==='part'?'Acertou em parte':'Errou'}">${r.state==='ok'?'✓':r.state==='part'?'≈':'✕'}</span><div class="rvb">${q.review}</div><span class="pts">${r.pts?'+'+r.pts:'0'}</span></li>`;
+  }).join('');
+  return `<section class="card stage">
+    <span class="eyebrow">Resultado · ${{ataque:'Ataque',fraquezas:'Fraquezas',golpe:'Melhor golpe',misto:'Treino misto'}[S.mode]}</span>
+    <div><div class="score-big">${S.score}</div><p class="grade">${grade}</p></div>
+    ${S.newRecord?'<span class="newrec">Novo recorde</span>':''}
+    <div class="facts"><div class="stat"><small>Acertos</small><b>${ok} de ${n}</b></div><div class="stat"><small>Melhor sequência</small><b>${S.bestStreak}</b></div></div>
+    <div class="actions"><button class="btn primary" data-act="start" data-val="${S.mode}">Jogar de novo</button><button class="btn" data-act="home">Trocar de modo</button></div>
+  </section>
+  <section class="card"><h2 class="h2">Revisão</h2><ul class="rvlist">${rows}</ul></section>`;
+}
+
+function studyHTML(){
+  const t=S.study,c=CHART[t];
+  const chips=T.map(x=>`<button class="chip" style="--c:${COLOR[x]};--on:${ON[x]}" data-act="studytype" data-val="${x}" aria-pressed="${x===t}">${LABEL[x]}</button>`).join('');
+  const tags=(arr,m)=>arr.length?arr.map(x=>`<span class="wt">${badge(x)}<b>${m}</b></span>`).join(''):'<span class="hint">Nenhum</span>';
+  const weakTo=T.filter(a=>CHART[a].se.includes(t)),resists=T.filter(a=>CHART[a].nve.includes(t)),immune=T.filter(a=>CHART[a].imm.includes(t));
+  const line=(title,arr,m)=>`<div class="line"><span class="eyebrow">${title}</span><div class="tags">${tags(arr,m)}</div></div>`;
+  let h='<table><caption class="sr">Tabela de tipos: linhas são atacantes, colunas são defensores</caption><thead><tr><th class="corner">ATQ ↓ DEF →</th>';
+  h+=T.map(d=>`<th class="col" style="--c:${COLOR[d]};--on:${ON[d]}" title="${LABEL[d]}">${abbr(d)}</th>`).join('')+'</tr></thead><tbody>';
+  T.forEach(a=>{
+    h+=`<tr><th class="row" style="--c:${COLOR[a]};--on:${ON[a]}">${LABEL[a]}</th>`+T.map(d=>{
+      const e=eff(a,d),cls=e===2?'se':e===0.5?'nve':e===0?'imm':'';
+      const txt=e===2?'2':e===0.5?'½':e===0?'0':'';
+      return `<td class="${cls}${a===t||d===t?' hl':''}" title="${LABEL[a]} contra ${LABEL[d]}: ${fmt(e)}">${txt}</td>`;
+    }).join('')+'</tr>';
+  });
+  h+='</tbody></table>';
+  return `<section class="hero"><h1>Estudar tipos</h1><p class="lede">Escolha um tipo para ver o que ele vence, o que o vence e o que não o afeta. Em tipos duplos, multiplique os dois efeitos.</p></section>
+  <section class="card" style="display:flex;flex-direction:column;gap:18px">
+    <div class="chips">${chips}</div>
+    <div class="cols">
+      <div class="grp"><h3>Atacando com ${badge(t)}</h3>${line('Super efetivo contra',c.se,'2×')}${line('Pouco efetivo contra',c.nve,'½×')}${line('Sem efeito contra',c.imm,'0×')}</div>
+      <div class="grp"><h3>Defendendo como ${badge(t)}</h3>${line('Fraco contra',weakTo,'2×')}${line('Resiste a',resists,'½×')}${line('Imune a',immune,'0×')}</div>
+    </div>
+  </section>
+  <section style="display:flex;flex-direction:column;gap:12px"><h2 class="h2" style="margin:0">Tabela completa</h2>
+    <div class="legend"><span><i class="sw" style="background:var(--good-bg);color:var(--good)">2</i>super efetivo</span><span><i class="sw" style="background:var(--bad-bg);color:var(--bad)">½</i>pouco efetivo</span><span><i class="sw" style="background:var(--ink);color:var(--bg)">0</i>sem efeito</span><span>vazio: dano normal</span></div>
+    <div class="scroll">${h}</div></section>`;
+}
+
+/* ---------- eventos ---------- */
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');
+  if(!el||el.disabled)return;
+  const a=el.dataset.act,v=el.dataset.val;
+  if(a==='home'){S.screen='home';render();window.scrollTo(0,0);}
+  else if(a==='study'){S.screen='study';render();window.scrollTo(0,0);}
+  else if(a==='start')start(v);
+  else if(a==='diff'){S.diff=v;savePrefs();S.focus=`[data-act="diff"][data-val="${v}"]`;render();}
+  else if(a==='ans')answer(v);
+  else if(a==='toggle'){
+    if(S.answered)return;
+    if(S.sel.has(v))S.sel.delete(v);else S.sel.add(v);
+    S.focus=`[data-act="toggle"][data-val="${v}"]`;render();
+  }
+  else if(a==='verify')verify();
+  else if(a==='next')next();
+  else if(a==='studytype'){S.study=v;S.focus=`[data-act="studytype"][data-val="${v}"]`;render();}
+});
+document.addEventListener('change',e=>{
+  if(e.target&&e.target.id==='hide'){S.hide=e.target.checked;savePrefs();}
+});
+document.addEventListener('keydown',e=>{
+  if(S.screen!=='play'||e.metaKey||e.ctrlKey||e.altKey)return;
+  const q=S.qs[S.i];
+  if(e.key==='Enter'){
+    if(S.answered){e.preventDefault();next();}
+    else if(q.kind==='fraquezas'){e.preventDefault();verify();}
+    return;
+  }
+  if(!S.answered&&/^[1-6]$/.test(e.key)){
+    const k=Number(e.key)-1;
+    if(q.kind==='ataque')answer(MULTS[k]);
+    else if(q.kind==='golpe'&&k<4)answer(q.options[k]);
+  }
+});
+
+render();
+</script>
+
+</body></html>
