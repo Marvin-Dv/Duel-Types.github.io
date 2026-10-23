@@ -6,10 +6,6 @@ Quiz web para treinar vantagens e fraquezas dos tipos Pokémon. Cada partida tem
 
 > Projeto de fãs, gratuito e sem fins lucrativos. Não é afiliado, patrocinado nem endossado pela Nintendo, pela Creatures Inc. ou pela GAME FREAK inc. Veja o [aviso legal](#aviso-legal).
 
-## Como jogar
-
-Abra o `index.html` no navegador. Não precisa instalar nada nem rodar servidor.
-
 ### Modos de jogo
 
 | Modo | O que você faz |
@@ -58,35 +54,6 @@ A tela **Estudar tipos** mostra, para cada um dos 18 tipos, o que ele vence, o q
 - Preferências, idioma e recordes ficam no `localStorage` do navegador. Nenhum dado é enviado a servidor.
 - A tabela de tipos segue a geração atual dos jogos, com os 18 tipos, incluindo Fada.
 
-## Hospedagem
-
-Por ser uma página estática, funciona em qualquer hospedagem gratuita:
-
-- **GitHub Pages:** em *Settings → Pages*, escolha a branch `main` e a pasta raiz.
-- **Cloudflare Pages**, **Netlify** ou **Vercel:** envie o projeto inteiro, mantendo as pastas `css/` e `js/` ao lado do `index.html`.
-
-A página principal precisa se chamar `index.html`, e os caminhos de `css/` e `js/` são relativos a ela.
-
-As meta tags de compartilhamento (título, descrição e imagem de preview) são estáticas e ficam em português, porque os apps de mensagem não executam JavaScript.
-
-## Estrutura
-
-```
-.
-├── index.html        # estrutura da página e meta tags de compartilhamento
-├── css/
-│   └── style.css     # tokens de cor, tema claro e escuro, layout e componentes
-├── js/
-│   └── app.js        # dados, idiomas, regras do jogo, telas e eventos
-├── og-image.png      # imagem de preview ao compartilhar o link (1200×630)
-├── README.md         # documentação em português
-└── README.en.md      # documentação em inglês
-```
-
-### Organização do `js/app.js`
-
-O arquivo segue esta ordem: dados e tabela de tipos, idioma (dicionários `NAMES` e `D`), utilidades, geradores de perguntas, estado e armazenamento, regras do jogo, telas e eventos.
-
 ## Contribuindo
 
 Sugestões e correções são bem-vindas, principalmente erros na tabela de tipos ou nos tipos de algum Pokémon. Abra uma issue ou um pull request.
@@ -102,7 +69,3 @@ Este é um projeto de fãs, gratuito e sem fins lucrativos. Não é afiliado, pa
 Pokémon, os nomes dos Pokémon e dos tipos e os demais elementos relacionados são marcas registradas e propriedade da Nintendo, Creatures Inc. e GAME FREAK inc. © Nintendo / Creatures Inc. / GAME FREAK inc. Todos os direitos reservados aos seus respectivos titulares.
 
 Este jogo não usa imagens, sprites, logotipos, músicas nem outros materiais oficiais. Os nomes são citados apenas para identificar os personagens, com finalidade educativa.
-
-## Licença
-
-O código deste repositório pode ser licenciado como você preferir (por exemplo, MIT). A licença do código não abrange as marcas, os nomes e a propriedade intelectual da Nintendo, da Creatures Inc. e da GAME FREAK inc.
