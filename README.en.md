@@ -6,10 +6,6 @@ A web quiz for practicing Pokémon type matchups and weaknesses. Each round has 
 
 > A free, non-profit fan project with no official ties. See the [legal notice](#legal-notice).
 
-## How to play
-
-Open `index.html` in your browser. There is nothing to install and no server to run.
-
 ### Game modes
 
 | Mode | What you do |
@@ -58,35 +54,6 @@ The **Study types** screen shows, for each of the 18 types, what it beats, what 
 - Preferences, language and best scores are stored in the browser's `localStorage`. No data is sent to any server.
 - The type chart follows the current generation of the games, with all 18 types, including Fairy.
 
-## Hosting
-
-Since it is a static page, it works on any free host:
-
-- **GitHub Pages:** in *Settings → Pages*, choose the `main` branch and the root folder.
-- **Cloudflare Pages**, **Netlify** or **Vercel:** upload the whole project, keeping the `css/` and `js/` folders next to `index.html`.
-
-The main page must be named `index.html`, and the `css/` and `js/` paths are relative to it.
-
-The sharing meta tags (title, description and preview image) are static and written in Portuguese, because messaging apps do not run JavaScript.
-
-## Structure
-
-```
-.
-├── index.html        # page structure and sharing meta tags
-├── css/
-│   └── style.css     # color tokens, light and dark themes, layout and components
-├── js/
-│   └── app.js        # data, languages, game rules, screens and events
-├── og-image.png      # preview image shown when sharing the link (1200×630)
-├── README.md         # documentation in Portuguese
-└── README.en.md      # documentation in English
-```
-
-### How `js/app.js` is organized
-
-The file follows this order: data and the type chart, language (the `NAMES` and `D` dictionaries), utilities, question generators, state and storage, game rules, screens and events.
-
 ## Contributing
 
 Suggestions and fixes are welcome, especially mistakes in the type chart or in a Pokémon's types. Open an issue or a pull request.
@@ -104,7 +71,3 @@ This is a free, non-profit fan project. It is not affiliated with, sponsored by,
 Pokémon, the names of Pokémon and types, and all related elements are trademarks and property of Nintendo, Creatures Inc. and GAME FREAK inc. © Nintendo / Creatures Inc. / GAME FREAK inc. All rights reserved to their respective owners.
 
 This game uses no official images, sprites, logos, music or other materials. Names are used only to identify the characters, for educational purposes.
-
-## License
-
-The code in this repository may be licensed however you prefer (for example, MIT). The code license does not cover the trademarks, names and intellectual property of Nintendo, Creatures Inc. and GAME FREAK inc.
