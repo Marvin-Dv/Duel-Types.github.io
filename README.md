@@ -1,5 +1,7 @@
 # Duelo de Tipos
 
+[Read in English](README.en.md)
+
 Quiz web para treinar vantagens e fraquezas dos tipos Pokémon. Cada partida tem 10 perguntas, e cada resposta vem com a explicação do resultado.
 
 > Projeto de fãs, gratuito e sem fins lucrativos. Não é afiliado, patrocinado nem endossado pela Nintendo, pela Creatures Inc. ou pela GAME FREAK inc. Veja o [aviso legal](#aviso-legal).
@@ -77,7 +79,8 @@ As meta tags de compartilhamento (título, descrição e imagem de preview) são
 ├── js/
 │   └── app.js        # dados, idiomas, regras do jogo, telas e eventos
 ├── og-image.png      # imagem de preview ao compartilhar o link (1200×630)
-└── README.md
+├── README.md         # documentação em português
+└── README.en.md      # documentação em inglês
 ```
 
 ### Organização do `js/app.js`
