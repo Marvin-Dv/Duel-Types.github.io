@@ -6,6 +6,19 @@ A web quiz for practicing Pokémon type matchups and weaknesses. Each round has 
 
 > A free, non-profit fan project with no official ties. See the [legal notice](#legal-notice).
 
+## How to play
+
+Open `index.html` in your browser. There is nothing to install and no server to run.
+
+### Main menu
+
+The game opens on a menu with four options:
+
+- **Play:** pick a difficulty and a duel mode.
+- **Study types:** every type's matchups and the full effectiveness chart.
+- **How to play:** rules, multipliers, scoring, shortcuts and the legal notice.
+- **Options:** language, hiding the Pokémon's types and clearing saved best scores.
+
 ### Game modes
 
 | Mode | What you do |
@@ -34,10 +47,11 @@ There is also an option to **hide the Pokémon's types** in the modes that show 
 
 - `1` to `6` answer in Attack mode, and `1` to `4` in Best move mode.
 - `Enter` moves to the next question and, in Weaknesses mode, checks your answer.
+- `Esc` goes back to the previous screen.
 
 ### Language
 
-The game is available in **Brazilian Portuguese** and **English**. Switch at any time with the **PT | EN** selector at the top of the page, even in the middle of a round, without losing your progress.
+The game is available in **Brazilian Portuguese** and **English**. Switch at any time with the **PT | EN** selector at the top of the page (or in **Options**), even in the middle of a round, without losing your progress.
 
 Your choice is saved in the player's browser and remembered on later visits. On the first visit, the game opens in English if the browser is set to English, and in Portuguese otherwise.
 
@@ -48,11 +62,42 @@ The **Study types** screen shows, for each of the 18 types, what it beats, what 
 ## Technical details
 
 - Plain HTML, CSS and JavaScript, in three files (`index.html`, `css/style.css` and `js/app.js`). No framework, no build step and no dependencies.
-- The only external request is for the Chakra Petch and Hanken Grotesk fonts from Google Fonts. Without a connection, the page falls back to system fonts.
+- The only external request is for the Big Shoulders Display and Albert Sans fonts from Google Fonts. Without a connection, the page falls back to system fonts.
 - Automatic light and dark themes, following the system preference.
 - Responsive layout, designed for phones and desktops.
 - Preferences, language and best scores are stored in the browser's `localStorage`. No data is sent to any server.
 - The type chart follows the current generation of the games, with all 18 types, including Fairy.
+
+## Hosting
+
+Since it is a static page, it works on any free host:
+
+- **GitHub Pages:** in *Settings → Pages*, choose the `main` branch and the root folder.
+- **Cloudflare Pages**, **Netlify** or **Vercel:** upload the whole project, keeping the `css/` and `js/` folders next to `index.html`.
+
+The main page must be named `index.html`, and the `css/` and `js/` paths are relative to it.
+
+The sharing meta tags (title, description and preview image) are static and written in Portuguese, because messaging apps do not run JavaScript.
+
+To change the preview image, replace the `thumb.jpg` file or edit the `og:image` and `twitter:image` lines in `index.html`. Always use the full GitHub Pages address (for example `https://marvin-dv.github.io/Duel-Types.github.io/thumb.jpg`) and never the file's `github.com` link, which opens the file page rather than the image.
+
+## Structure
+
+```
+.
+├── index.html        # page structure and sharing meta tags
+├── css/
+│   └── style.css     # color tokens, light and dark themes, plates, screens and components
+├── js/
+│   └── app.js        # data, languages, game rules, screens and events
+├── thumb.jpg         # preview image shown when sharing the link
+├── README.md         # documentation in Portuguese
+└── README.en.md      # documentation in English
+```
+
+### How `js/app.js` is organized
+
+The file follows this order: data and the type chart, language (the `NAMES` and `D` dictionaries), utilities, question generators, state and storage, game rules, screens (menu, duel selection, options, how to play, game, results and study) and events.
 
 ## Contributing
 
@@ -60,7 +105,7 @@ Suggestions and fixes are welcome, especially mistakes in the type chart or in a
 
 To add or fix texts, edit the `D` dictionary (keys `pt` and `en`) inside `js/app.js`. Type names live in `NAMES`. To add a new language, add an entry to `D` and to `NAMES`, and include the code in the `LANGS` list.
 
-To change colors, spacing or themes, edit `css/style.css`.
+To change colors, typography or themes, edit the tokens at the top of `css/style.css`.
 
 To add Pokémon, add a line to the `POKE` list inside `js/app.js`, in the format `P(pokedex_number, 'Name', 'type1', 'type2')`. Type keys are written in Portuguese (for example `'fogo'` for Fire and `'agua'` for Water). You can find them in the `NAMES` dictionary.
 
@@ -71,3 +116,7 @@ This is a free, non-profit fan project. It is not affiliated with, sponsored by,
 Pokémon, the names of Pokémon and types, and all related elements are trademarks and property of Nintendo, Creatures Inc. and GAME FREAK inc. © Nintendo / Creatures Inc. / GAME FREAK inc. All rights reserved to their respective owners.
 
 This game uses no official images, sprites, logos, music or other materials. Names are used only to identify the characters, for educational purposes.
+
+## License
+
+The code in this repository may be licensed however you prefer (for example, MIT). The code license does not cover the trademarks, names and intellectual property of Nintendo, Creatures Inc. and GAME FREAK inc.

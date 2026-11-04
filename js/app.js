@@ -1,6 +1,6 @@
 /* Duelo de Tipos: lógica do jogo.
    Seções, em ordem: dados e tabela de tipos, idioma (i18n), utilidades, geradores de perguntas,
-   estado e armazenamento, regras do jogo, telas, eventos. */
+   estado e armazenamento, regras do jogo, telas (menu, escolha do duelo, opções, como jogar, jogo, resultado, estudo), eventos. */
 
 'use strict';
 /* ---------- dados ---------- */
@@ -90,19 +90,17 @@ const NAMES={
 const D={
 pt:{
   title:'Duelo de Tipos', dexPre:'Nº ', langLabel:'Idioma',
-  study:'Estudar tipos', back:'Voltar ao jogo',
-  lede:'Teste o que você sabe sobre vantagens e fraquezas dos tipos Pokémon. Cada partida tem 10 perguntas, e cada resposta vem com a explicação.',
+  study:'Estudar tipos', back:'Voltar',
   difficulty:'Dificuldade', diffs:{facil:'Fácil',medio:'Médio',dificil:'Difícil'},
   dd:{facil:'Só tipos únicos. Os Pokémon e os defensores têm um tipo só.',medio:'Mistura tipos únicos e duplos.',dificil:'Só tipos duplos. Os multiplicadores 4× e ¼× entram em jogo.'},
-  hide:'Ocultar os tipos do Pokémon nos modos com Pokémon. Você precisa saber quais são.',
-  chooseMode:'Escolha um modo',
+  hide:'Nos modos com Pokémon, você precisa saber quais são os tipos dele.',
   modes:{
     ataque:{name:'Ataque',desc:'Um tipo ataca outro. Qual é o multiplicador de dano?'},
     fraquezas:{name:'Fraquezas',desc:'Veja um Pokémon e marque todos os tipos que causam dano extra nele.'},
     golpe:{name:'Melhor golpe',desc:'Quatro tipos de golpe, só um é o mais efetivo contra o Pokémon.'},
     misto:{name:'Treino misto',desc:'Os três modos embaralhados em uma só partida.'}
   },
-  mixPrev:'Ataque · Fraquezas · Melhor golpe', record:'Recorde: ',
+  record:'Recorde: ',
   qAria:(i,n)=>`Pergunta ${i} de ${n}`, points:'Pontos', streak:'Sequência', hidden:'Tipos ocultos',
   move:'Golpe', defender:'Defensor', qMult:'Qual é o multiplicador de dano?',
   ml:{0:'Sem efeito',0.25:'Muito pouco efetivo',0.5:'Pouco efetivo',1:'Dano normal',2:'Super efetivo',4:'Extremamente efetivo'},
@@ -131,25 +129,41 @@ pt:{
   fullTable:'Tabela completa', caption:'Tabela de tipos: linhas são atacantes, colunas são defensores', corner:'ATQ ↓ DEF →',
   lgSe:'super efetivo', lgNve:'pouco efetivo', lgImm:'sem efeito', lgNormal:'vazio: dano normal',
   cell:(a,d,m)=>`${a} contra ${d}: ${m}`,
+  titleA:'Duelo', titleB:'de Tipos',
+  tagline:'Quem vence quem? Treine as fraquezas dos 18 tipos Pokémon.',
+  navPlay:'Jogar', navPlayD:'Escolha a dificuldade e o modo de duelo',
+  navStudyD:'Fraquezas de cada tipo e a tabela completa',
+  navHow:'Como jogar', navHowD:'Regras, pontuação e atalhos',
+  navOpt:'Opções', navOptD:'Idioma, tipos ocultos e recordes',
+  toMenu:'Menu', vs:'VS',
+  pickTitle:'Escolha seu duelo', pickSub:'Defina a dificuldade e entre em um dos modos.',
+  optHide:'Ocultar tipos do Pokémon', optRecords:'Recordes',
+  optRecordsD:'Apaga os melhores placares salvos neste navegador.',
+  clear:'Apagar recordes', clearSure:'Toque de novo para confirmar', cleared:'Recordes apagados.',
+  howGoal:'Cada partida tem 10 perguntas. Escolha um modo, responda e veja a explicação de cada resposta.',
+  howModesT:'Os modos', howMultT:'Multiplicadores',
+  howMult:{4:'Extremamente efetivo: os dois tipos do defensor são fracos contra o golpe.',2:'Super efetivo: o dano é dobrado.',1:'Dano normal.',0.5:'Pouco efetivo: o dano cai pela metade.',0.25:'Muito pouco efetivo: os dois tipos do defensor resistem.',0:'Sem efeito: o defensor é imune ao golpe.'},
+  howScoreT:'Pontuação',
+  howScore:['Cada acerto vale 100 pontos, mais 10 por acerto seguido (o bônus chega a 50).','No modo Fraquezas, acertar só parte dá pontos proporcionais, e marcar um tipo errado reduz a pontuação.','Errar zera a sequência. O melhor placar de cada modo e dificuldade fica salvo no navegador.'],
+  howKeysT:'Atalhos', howKeys:'Teclas 1 a 6 respondem no modo Ataque, e 1 a 4 no modo Melhor golpe. Enter avança e, no modo Fraquezas, verifica a resposta. Esc volta.',
+  legalTitle:'Aviso legal', legalShort:'Projeto de fã, sem fins lucrativos e sem vínculo com a Nintendo, a Creatures Inc. ou a GAME FREAK inc.', legalLink:'Aviso legal',
   legal1:'<strong>Projeto de fã, gratuito e sem fins lucrativos.</strong> Este site não é afiliado, patrocinado, aprovado nem endossado pela Nintendo, pela Creatures Inc. ou pela GAME FREAK inc.',
   legal2:'Pokémon, os nomes dos Pokémon e dos tipos e os demais elementos relacionados são marcas registradas e propriedade da Nintendo, Creatures Inc. e GAME FREAK inc. © Nintendo / Creatures Inc. / GAME FREAK inc. Todos os direitos reservados aos seus respectivos titulares.',
   legal3:'Este jogo não usa imagens, sprites, logotipos, músicas nem outros materiais oficiais. Os nomes são citados apenas para identificar os personagens, com finalidade educativa.'
 },
 en:{
   title:'Type Duel', dexPre:'No. ', langLabel:'Language',
-  study:'Study types', back:'Back to game',
-  lede:'Test what you know about Pokémon type matchups and weaknesses. Each round has 10 questions, and every answer comes with an explanation.',
+  study:'Study types', back:'Back',
   difficulty:'Difficulty', diffs:{facil:'Easy',medio:'Medium',dificil:'Hard'},
   dd:{facil:'Single types only. Pokémon and defenders have just one type.',medio:'A mix of single and dual types.',dificil:'Dual types only. The 4× and ¼× multipliers come into play.'},
-  hide:'Hide the Pokémon’s types in modes that show a Pokémon. You have to know them.',
-  chooseMode:'Choose a mode',
+  hide:'In modes that show a Pokémon, you have to know its types.',
   modes:{
     ataque:{name:'Attack',desc:'One type attacks another. What is the damage multiplier?'},
     fraquezas:{name:'Weaknesses',desc:'See a Pokémon and mark every type that deals extra damage to it.'},
     golpe:{name:'Best move',desc:'Four move types, only one is the most effective against the Pokémon.'},
     misto:{name:'Mixed training',desc:'All three modes shuffled into a single round.'}
   },
-  mixPrev:'Attack · Weaknesses · Best move', record:'Best: ',
+  record:'Best: ',
   qAria:(i,n)=>`Question ${i} of ${n}`, points:'Score', streak:'Streak', hidden:'Types hidden',
   move:'Move', defender:'Defender', qMult:'What is the damage multiplier?',
   ml:{0:'No effect',0.25:'Heavily resisted',0.5:'Not very effective',1:'Normal damage',2:'Super effective',4:'Extremely effective'},
@@ -178,6 +192,24 @@ en:{
   fullTable:'Full type chart', caption:'Type chart: rows are attackers, columns are defenders', corner:'ATK ↓ DEF →',
   lgSe:'super effective', lgNve:'not very effective', lgImm:'no effect', lgNormal:'blank: normal damage',
   cell:(a,d,m)=>`${a} vs ${d}: ${m}`,
+  titleA:'Type', titleB:'Duel',
+  tagline:'Who beats whom? Train the weaknesses of all 18 Pokémon types.',
+  navPlay:'Play', navPlayD:'Pick a difficulty and a duel mode',
+  navStudyD:'Every type\u2019s matchups and the full chart',
+  navHow:'How to play', navHowD:'Rules, scoring and shortcuts',
+  navOpt:'Options', navOptD:'Language, hidden types and best scores',
+  toMenu:'Menu', vs:'VS',
+  pickTitle:'Choose your duel', pickSub:'Set the difficulty and jump into a mode.',
+  optHide:'Hide the Pokémon\u2019s types', optRecords:'Best scores',
+  optRecordsD:'Deletes the best scores saved in this browser.',
+  clear:'Clear best scores', clearSure:'Tap again to confirm', cleared:'Best scores cleared.',
+  howGoal:'Each round has 10 questions. Pick a mode, answer, and read the explanation for every answer.',
+  howModesT:'The modes', howMultT:'Multipliers',
+  howMult:{4:'Extremely effective: both of the defender\u2019s types are weak to the move.',2:'Super effective: damage is doubled.',1:'Normal damage.',0.5:'Not very effective: damage is halved.',0.25:'Heavily resisted: both of the defender\u2019s types resist the move.',0:'No effect: the defender is immune to the move.'},
+  howScoreT:'Scoring',
+  howScore:['Each correct answer is worth 100 points, plus 10 for every correct answer in a row (the bonus tops out at 50).','In Weaknesses mode, getting only some right gives proportional points, and marking a wrong type lowers the score.','A wrong answer resets the streak. The best score for each mode and difficulty is saved in the browser.'],
+  howKeysT:'Shortcuts', howKeys:'Keys 1 to 6 answer in Attack mode, and 1 to 4 in Best move mode. Enter moves on and, in Weaknesses mode, checks your answer. Esc goes back.',
+  legalTitle:'Legal notice', legalShort:'A free, non-profit fan project with no ties to Nintendo, Creatures Inc. or GAME FREAK inc.', legalLink:'Legal notice',
   legal1:'<strong>Fan project, free and non-profit.</strong> This site is not affiliated with, sponsored by, approved by or endorsed by Nintendo, Creatures Inc. or GAME FREAK inc.',
   legal2:'Pokémon, the names of Pokémon and types, and all related elements are trademarks and property of Nintendo, Creatures Inc. and GAME FREAK inc. © Nintendo / Creatures Inc. / GAME FREAK inc. All rights reserved to their respective owners.',
   legal3:'This game uses no official images, sprites, logos, music or other materials. Names are used only to identify the characters, for educational purposes.'
@@ -260,8 +292,8 @@ function buildGame(mode,diff){
 }
 
 /* ---------- estado e armazenamento ---------- */
-const S={screen:'home',mode:null,diff:'medio',hide:false,qs:[],i:0,score:0,streak:0,bestStreak:0,
-  answered:false,picked:null,sel:new Set(),results:[],study:'fogo',enter:false,focus:null,newRecord:false};
+const S={screen:'menu',mode:null,diff:'medio',hide:false,qs:[],i:0,score:0,streak:0,bestStreak:0,
+  answered:false,picked:null,sel:new Set(),results:[],study:'fogo',enter:true,focus:null,newRecord:false,clearArm:false,cleared:false,anchor:null};
 try{
   const p=JSON.parse(localStorage.getItem('duelo-tipos:prefs')||'{}');
   if(['facil','medio','dificil'].includes(p.diff))S.diff=p.diff;
@@ -271,8 +303,7 @@ function savePrefs(){try{localStorage.setItem('duelo-tipos:prefs',JSON.stringify
 function getBest(){try{return JSON.parse(localStorage.getItem('duelo-tipos:best')||'{}');}catch(e){return {};}}
 function setBest(o){try{localStorage.setItem('duelo-tipos:best',JSON.stringify(o));}catch(e){}}
 
-document.documentElement.style.setProperty('--wheel',
-  'conic-gradient('+T.map((t,i)=>`${COLOR[t]} ${(i*100/18).toFixed(2)}% ${((i+1)*100/18).toFixed(2)}%`).join(',')+')');
+document.documentElement.style.setProperty('--spectrum','linear-gradient(90deg,'+T.map((t,i)=>`${COLOR[t]} ${(i*100/T.length).toFixed(2)}% ${((i+1)*100/T.length).toFixed(2)}%`).join(',')+')');
 
 /* ---------- jogo ---------- */
 function start(mode){
@@ -319,17 +350,60 @@ function next(){
 
 /* ---------- telas ---------- */
 const $app=document.getElementById('app');
+/* Para onde cada tela volta. O menu é a raiz. */
+const BACK={modes:'menu',options:'menu',how:'menu',study:'menu',play:'modes',result:'modes'};
+const SVG='<svg viewBox="0 0 24 24" aria-hidden="true"';
+const ICON={
+  play:SVG+' fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>',
+  study:SVG+' fill="currentColor"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>',
+  how:SVG+' fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.6a2.6 2.6 0 015 .8c0 1.7-2.5 2-2.5 3.6M12 17.4v.01"/></svg>',
+  options:SVG+' fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.6"/><circle cx="8" cy="17" r="2.6"/></svg>',
+  go:SVG+' fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>',
+  left:SVG+' fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H5M11 6l-6 6 6 6"/></svg>'
+};
+
+/* Anel com os 18 tipos: a marca do jogo. */
+function ringSVG(){
+  const n=T.length,R=104,r=66,gap=1.8,c=110;
+  const pt=(rad,deg)=>{const a=(deg-90)*Math.PI/180;return [(c+rad*Math.cos(a)).toFixed(2),(c+rad*Math.sin(a)).toFixed(2)];};
+  const paths=T.map((x,i)=>{
+    const a0=i*360/n+gap/2,a1=(i+1)*360/n-gap/2;
+    const [x0,y0]=pt(R,a0),[x1,y1]=pt(R,a1),[x2,y2]=pt(r,a1),[x3,y3]=pt(r,a0);
+    return `<path d="M${x0} ${y0}A${R} ${R} 0 0 1 ${x1} ${y1}L${x2} ${y2}A${r} ${r} 0 0 0 ${x3} ${y3}Z" fill="${COLOR[x]}"/>`;
+  }).join('');
+  return `<svg viewBox="0 0 220 220" aria-hidden="true">${paths}</svg>`;
+}
+/* Placa: um segmento de cor sólida com o nome do tipo. */
+const sp=(t,eyebrow,grow)=>`<span class="p" style="--c:${COLOR[t]};--on:${ON[t]};--g:${grow||1}"><span class="in">${eyebrow?`<i>${eyebrow}</i>`:''}<b>${LABEL[t]}</b></span></span>`;
+/* Segmento só de cor, para miniaturas pequenas demais para o nome. */
+const spc=t=>`<span class="p" style="--c:${COLOR[t]}"></span>`;
+const vsChip=()=>`<span class="vs" aria-hidden="true"><b>${tr('vs')}</b></span>`;
+
+function go(screen,anchor){
+  S.screen=screen;S.enter=true;S.anchor=anchor||null;S.focus='[data-first]';
+  S.clearArm=false;S.cleared=false;
+  render();
+  if(!anchor)window.scrollTo(0,0);
+}
 function render(){
   document.documentElement.lang=LANG==='en'?'en':'pt-BR';
   document.title=tr('title');
-  let html;
-  if(S.screen==='home')html=homeHTML();
-  else if(S.screen==='play')html=playHTML();
-  else if(S.screen==='result')html=resultHTML();
-  else html=studyHTML();
-  $app.innerHTML=`<div class="wrap">${headerHTML()}${html}${legalHTML()}</div>`;
-  if(S.focus){const el=$app.querySelector(S.focus);if(el)el.focus();S.focus=null;}
+  const views={menu:menuHTML,modes:modesHTML,options:optionsHTML,how:howHTML,study:studyHTML,play:playHTML,result:resultHTML};
+  $app.innerHTML=`<div class="app">${barHTML()}<main class="screen${S.enter?' enter':''}" id="main">${views[S.screen]()}</main>${footHTML()}</div>`;
+  if(S.focus){const el=$app.querySelector(S.focus);if(el&&el.focus)el.focus({preventScroll:true});S.focus=null;}
+  if(S.anchor){const el=$app.querySelector('#'+S.anchor);if(el&&el.scrollIntoView)el.scrollIntoView();S.anchor=null;}
   S.enter=false;
+}
+function langSeg(big){
+  const lb=(l,txt,ttl)=>`<button data-act="lang" data-val="${l}" aria-pressed="${LANG===l}" title="${ttl}" lang="${l==='pt'?'pt-BR':'en'}">${txt}</button>`;
+  return `<div class="seg${big?' lg':''}" role="group" aria-label="${tr('langLabel')}">${lb('pt','PT','Português (Brasil)')}${lb('en','EN','English')}</div>`;
+}
+function barHTML(){
+  const back=S.screen==='menu'?'':`<button class="back" data-act="back">${ICON.left}<span>${S.screen==='play'?tr('exit'):tr('back')}</span></button>`;
+  return `<header class="bar">${back}<div class="tools">${langSeg(false)}</div></header>`;
+}
+function footHTML(){
+  return `<footer class="foot"><p>${tr('legalShort')} <button class="link" data-act="legal">${tr('legalLink')}</button></p></footer>`;
 }
 function reviewHTML(q){
   if(q.kind==='ataque')return `${badge(q.atk)}<span class="ar">→</span>${q.defs.map(d=>badge(d)).join(' ')} <b>${fmt(q.m)}</b>`;
@@ -337,45 +411,85 @@ function reviewHTML(q){
   if(q.kind==='fraquezas')return head+weakTags(q.weak);
   return head+tr('revBest',badge(q.best),fmt(q.mults[q.best]));
 }
-function legalHTML(){
-  return `<footer class="legal"><p>${tr('legal1')}</p><p>${tr('legal2')}</p><p>${tr('legal3')}</p></footer>`;
-}
-function headerHTML(){
-  const study=S.screen==='study';
-  const lb=(l,txt,ttl)=>`<button data-act="lang" data-val="${l}" aria-pressed="${LANG===l}" title="${ttl}" lang="${l==='pt'?'pt-BR':'en'}">${txt}</button>`;
-  return `<header class="top"><button class="brand" data-act="home"><span class="wheel" aria-hidden="true"></span>${tr('title')}</button>
-  <div class="tools"><div class="seg sm" role="group" aria-label="${tr('langLabel')}">${lb('pt','PT','Português (Brasil)')}${lb('en','EN','English')}</div>
-  <button class="btn sm" data-act="${study?'home':'study'}">${study?tr('back'):tr('study')}</button></div></header>`;
-}
 
-function homeHTML(){
-  const best=getBest();
-  const M=D[LANG].modes;
-  const modes=[
-    {id:'ataque',prev:`${badge('agua')}${ARROW.replace('class="arrow"','class="arrow" style="width:28px;height:18px"')}${badge('fogo')}<span class="mini-mult">?</span>`},
-    {id:'fraquezas',prev:`<span class="dex">${dexNo(94)}</span><b>Gengar</b>${badge('fantasma')}${badge('veneno')}`},
-    {id:'golpe',prev:['eletrico','terra','voador','gelo'].map(x=>badge(x)).join('')},
-    {id:'misto',prev:`<span class="hint">${tr('mixPrev')}</span>`}
+/* --- menu inicial --- */
+function menuHTML(){
+  const items=[
+    ['modes','fogo','play','navPlay','navPlayD'],
+    ['study','agua','study','study','navStudyD'],
+    ['how','planta','how','navHow','navHowD'],
+    ['options','psiquico','options','navOpt','navOptD']
   ];
-  return `
-  <section class="hero">
-    <h1>${tr('title')}</h1>
-    <p class="lede">${tr('lede')}</p>
-    <div class="strip" aria-hidden="true">${badge('agua','lg')}${ARROW}${badge('fogo','lg')}<span class="mult">2×</span><span class="cap">${mlabel(2)}</span></div>
-  </section>
-  <section class="card settings">
-    <div class="field"><span class="eyebrow" id="dl">${tr('difficulty')}</span>
-      <div class="seg" role="group" aria-labelledby="dl">${['facil','medio','dificil'].map(v=>`<button data-act="diff" data-val="${v}" aria-pressed="${S.diff===v}">${D[LANG].diffs[v]}</button>`).join('')}</div>
-      <p class="hint">${D[LANG].dd[S.diff]}</p></div>
-    <label class="check"><input type="checkbox" id="hide" ${S.hide?'checked':''}><span>${tr('hide')}</span></label>
-  </section>
-  <section><h2 class="h2">${tr('chooseMode')}</h2>
-    <div class="modes">${modes.map(m=>`<button class="mode" data-act="start" data-val="${m.id}">
-      <span class="prev">${m.prev}</span><span class="name">${M[m.id].name}</span><span class="desc">${M[m.id].desc}</span>
-      <span class="rec">${tr('record')}${best[m.id+':'+S.diff]||'—'}</span></button>`).join('')}</div>
+  const nav=items.map(([act,t,ico,n,d],i)=>`<button class="navitem" style="--c:${COLOR[t]};--on:${ON[t]};--i:${i}" data-act="go" data-val="${act}" ${i===0?'data-first':''}>
+    <span class="ico">${ICON[ico]}</span><span class="txt"><b>${tr(n)}</b><small>${tr(d)}</small></span><span class="go">${ICON.go}</span></button>`).join('');
+  return `<section class="menu">
+    <div class="titleblock">
+      <h1 class="title"><span>${tr('titleA')}</span><span>${tr('titleB')}</span></h1>
+      <div class="spectrum" aria-hidden="true"></div>
+      <p class="tag">${tr('tagline')}</p>
+      <div class="plate demo" aria-hidden="true">${sp('agua',tr('move'))}${vsChip()}${sp('fogo',tr('defender'))}<span class="p neutral"><span class="in"><b>2×</b></span></span></div>
+      <nav class="nav" aria-label="${tr('title')}">${nav}</nav>
+    </div>
+    <div class="ringwrap" aria-hidden="true">
+      <div class="ring">${ringSVG()}</div>
+      <div class="hub"><div class="row">${badge('agua')}${badge('fogo')}</div><div class="x">2×</div><small>${mlabel(2)}</small></div>
+    </div>
   </section>`;
 }
 
+/* --- escolha do duelo --- */
+function hideRow(){
+  return `<label class="toggle-row"><span class="rtxt"><b>${tr('optHide')}</b><small>${tr('hide')}</small></span><input class="sw" type="checkbox" role="switch" id="hide" ${S.hide?'checked':''}></label>`;
+}
+function modesHTML(){
+  const best=getBest(),M=D[LANG].modes;
+  const plates={
+    ataque:sp('agua')+sp('fogo'),
+    fraquezas:sp('fantasma')+sp('veneno'),
+    golpe:['eletrico','terra','voador','gelo'].map(spc).join(''),
+    misto:['fogo','agua','planta','eletrico','psiquico','dragao'].map(spc).join('')
+  };
+  const lv=['facil','medio','dificil'].map(v=>`<button class="level" data-act="diff" data-val="${v}" aria-pressed="${S.diff===v}"><b>${D[LANG].diffs[v]}</b><small>${D[LANG].dd[v]}</small></button>`).join('');
+  const cards=['ataque','fraquezas','golpe','misto'].map(id=>`<button class="mode" data-act="start" data-val="${id}">
+    <span class="plate sm" aria-hidden="true">${plates[id]}</span>
+    <span class="mname">${M[id].name}</span><span class="mdesc">${M[id].desc}</span>
+    <span class="mrec">${tr('record')}<b>${best[id+':'+S.diff]||'—'}</b></span></button>`).join('');
+  return `<section class="pickhead"><h1 class="h1" tabindex="-1" data-first>${tr('pickTitle')}</h1><p class="lede">${tr('pickSub')}</p></section>
+  <section class="rows"><span class="eyebrow" id="dl">${tr('difficulty')}</span>
+    <div class="levels" role="group" aria-labelledby="dl">${lv}</div>
+    ${hideRow()}</section>
+  <section class="modes">${cards}</section>`;
+}
+
+/* --- opções --- */
+function optionsHTML(){
+  const clear=S.clearArm?tr('clearSure'):tr('clear');
+  return `<section class="pickhead"><h1 class="h1" tabindex="-1" data-first>${tr('navOpt')}</h1></section>
+  <section class="rows">
+    <div class="row-card"><span class="rtxt"><b>${tr('langLabel')}</b><small>Português (Brasil) · English</small></span>${langSeg(true)}</div>
+    ${hideRow()}
+    <div class="row-card"><span class="rtxt"><b>${tr('optRecords')}</b><small>${S.cleared?tr('cleared'):tr('optRecordsD')}</small></span>
+      <button class="btn" data-act="clear">${clear}</button></div>
+  </section>`;
+}
+
+/* --- como jogar e aviso legal --- */
+function howHTML(){
+  const M=D[LANG].modes,H=D[LANG];
+  const modes=['ataque','fraquezas','golpe','misto'].map(id=>`<li><b>${M[id].name}.</b> ${M[id].desc}</li>`).join('');
+  const mult=[4,2,1,0.5,0.25,0].map(m=>`<li><b>${fmt(m)}</b><span>${H.howMult[m]}</span></li>`).join('');
+  return `<section class="pickhead"><h1 class="h1" tabindex="-1" data-first>${tr('navHow')}</h1><p class="lede">${tr('howGoal')}</p></section>
+  <section class="howgrid">
+    <div class="panel"><h2 class="h2">${tr('howModesT')}</h2><ul>${modes}</ul></div>
+    <div class="panel"><h2 class="h2">${tr('howMultT')}</h2><ul class="mlist">${mult}</ul></div>
+    <div class="panel"><h2 class="h2">${tr('howScoreT')}</h2><ul>${H.howScore.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div class="panel"><h2 class="h2">${tr('howKeysT')}</h2><p>${tr('howKeys')}</p></div>
+  </section>
+  <section class="panel" id="legal"><h2 class="h2">${tr('legalTitle')}</h2>
+    <div class="legalbox"><p>${tr('legal1')}</p><p>${tr('legal2')}</p><p>${tr('legal3')}</p></div></section>`;
+}
+
+/* --- jogo --- */
 function hudHTML(){
   const pips=S.qs.map((q,i)=>{const r=S.results[i];const c=r?r.state:(i===S.i?'cur':'');return `<span class="pip ${c}"></span>`;}).join('');
   return `<div class="hud"><div class="pips" role="img" aria-label="${tr('qAria',S.i+1,S.qs.length)}">${pips}</div>
@@ -383,26 +497,26 @@ function hudHTML(){
 }
 function monHTML(p){
   const show=!S.hide||S.answered;
-  return `<div class="mon"><span class="dex">${dexNo(p.n)}</span><h2>${p.name}</h2></div>
-  <div class="types">${show?p.t.map(x=>badge(x)).join(''):`<span class="tb unk">${tr('hidden')}</span>`}</div>`;
+  return `<div class="monhead"><span class="dex">${dexNo(p.n)}</span><h2 class="monname">${p.name}</h2></div>
+  <div class="plate low">${show?p.t.map(x=>sp(x)).join(''):`<span class="p unk"><span class="in"><b>${tr('hidden')}</b></span></span>`}</div>`;
 }
 function ataqueBody(q){
+  const n=q.defs.length;
   const opts=MULTS.map((m,i)=>{
     let cls='opt';
     if(S.answered){if(m===q.m)cls+=' ok';else if(S.picked!==null&&Number(S.picked)===m)cls+=' no';else cls+=' dim';}
     return `<button class="${cls}" data-act="ans" data-val="${m}" ${S.answered?'disabled':''}><span class="big">${fmt(m)}</span><span class="sub">${mlabel(m)}</span><span class="k">${i+1}</span></button>`;
   }).join('');
-  return `<div class="duel"><div class="side"><span class="eyebrow">${tr('move')}</span>${badge(q.atk,'lg')}</div>${ARROW}
-  <div class="side"><span class="eyebrow">${tr('defender')}</span>${q.defs.map(d=>badge(d,'lg')).join('')}</div></div>
-  <p class="prompt">${tr('qMult')}</p><div class="opts mult">${opts}</div>`;
+  return `<div class="plate">${sp(q.atk,tr('move'),n)}${vsChip()}${q.defs.map((d,i)=>sp(d,i?'':tr('defender'),1)).join('')}</div>
+  <p class="prompt">${tr('qMult')}</p><div class="dial">${opts}</div>`;
 }
 function golpeBody(q){
   const opts=q.options.map((x,i)=>{
-    let cls='topt';
+    let cls='tbtn';
     if(S.answered){if(x===q.best)cls+=' ok';else if(S.picked===x)cls+=' no';else cls+=' dim';}
     return `<button class="${cls}" style="--c:${COLOR[x]};--on:${ON[x]}" data-act="ans" data-val="${x}" ${S.answered?'disabled':''}>${LABEL[x]}${S.answered?`<span class="m">${fmt(q.mults[x])}</span>`:`<span class="k">${i+1}</span>`}</button>`;
   }).join('');
-  return `${monHTML(q.p)}<p class="prompt">${tr('qBest',q.p.name)}</p><div class="opts types">${opts}</div>`;
+  return `${monHTML(q.p)}<p class="prompt">${tr('qBest',q.p.name)}</p><div class="opts-types">${opts}</div>`;
 }
 function fraqBody(q){
   const n=Object.keys(q.weak).length;
@@ -449,13 +563,14 @@ function playHTML(){
   const body=q.kind==='ataque'?ataqueBody(q):q.kind==='fraquezas'?fraqBody(q):golpeBody(q);
   const keys=!S.answered&&q.kind!=='fraquezas'?`<p class="hint keys">${tr('keys',q.kind==='ataque'?6:4)}</p>`:'';
   return `${hudHTML()}
-  <section class="card stage${S.enter?' enter':''}">
-    <div class="qtop"><span class="eyebrow">${tr('qLabel',S.i+1,S.qs.length,mn)}</span><button class="link" data-act="home">${tr('exit')}</button></div>
+  <section class="stage${S.enter?' enter':''}">
+    <span class="eyebrow">${tr('qLabel',S.i+1,S.qs.length,mn)}</span>
     ${body}${keys}
     <div id="fb" role="status">${S.answered?feedbackHTML(q,last):''}</div>
   </section>`;
 }
 
+/* --- resultado --- */
 function resultHTML(){
   const n=S.qs.length,ok=S.results.filter(r=>r.state==='ok').length;
   const G=D[LANG].grades;
@@ -465,16 +580,17 @@ function resultHTML(){
     const r=S.results[i]||{state:'no',pts:0};
     return `<li class="rv ${r.state}"><span class="mark" aria-label="${MK[r.state]}">${r.state==='ok'?'✓':r.state==='part'?'≈':'✕'}</span><div class="rvb">${reviewHTML(q)}</div><span class="pts">${r.pts?'+'+r.pts:'0'}</span></li>`;
   }).join('');
-  return `<section class="card stage">
-    <span class="eyebrow">${tr('result')} · ${D[LANG].modes[S.mode].name}</span>
-    <div><div class="score-big">${S.score}</div><p class="grade">${grade}</p></div>
+  return `<section class="scoreplate">
+    <span class="eyebrow">${tr('result')} · ${D[LANG].modes[S.mode].name} · ${D[LANG].diffs[S.diff]}</span>
+    <div class="score-big" tabindex="-1" data-first>${S.score}</div><p class="grade">${grade}</p>
     ${S.newRecord?`<span class="newrec">${tr('newRecord')}</span>`:''}
     <div class="facts"><div class="stat"><small>${tr('hits')}</small><b>${tr('of',ok,n)}</b></div><div class="stat"><small>${tr('bestStreak')}</small><b>${S.bestStreak}</b></div></div>
-    <div class="actions"><button class="btn primary" data-act="start" data-val="${S.mode}">${tr('again')}</button><button class="btn" data-act="home">${tr('changeMode')}</button></div>
+    <div class="actions start"><button class="btn primary" data-act="start" data-val="${S.mode}">${tr('again')}</button><button class="btn" data-act="go" data-val="modes">${tr('changeMode')}</button><button class="btn" data-act="go" data-val="menu">${tr('toMenu')}</button></div>
   </section>
-  <section class="card"><h2 class="h2">${tr('review')}</h2><ul class="rvlist">${rows}</ul></section>`;
+  <section class="panel"><h2 class="h2">${tr('review')}</h2><ul class="rvlist">${rows}</ul></section>`;
 }
 
+/* --- estudar tipos --- */
 function studyHTML(){
   const ty=S.study,c=CHART[ty];
   const chips=T.map(x=>`<button class="chip" style="--c:${COLOR[x]};--on:${ON[x]}" data-act="studytype" data-val="${x}" aria-pressed="${x===ty}">${LABEL[x]}</button>`).join('');
@@ -491,16 +607,15 @@ function studyHTML(){
     }).join('')+'</tr>';
   });
   h+='</tbody></table>';
-  return `<section class="hero"><h1>${tr('study')}</h1><p class="lede">${tr('studyLede')}</p></section>
-  <section class="card" style="display:flex;flex-direction:column;gap:18px">
-    <div class="chips">${chips}</div>
-    <div class="cols">
-      <div class="grp"><h3>${tr('attackingWith',badge(ty))}</h3>${line(tr('seLine'),c.se,'2×')}${line(tr('nveLine'),c.nve,'½×')}${line(tr('immLine'),c.imm,'0×')}</div>
-      <div class="grp"><h3>${tr('defendingAs',badge(ty))}</h3>${line(tr('weakTo'),weakTo,'2×')}${line(tr('resists'),resists,'½×')}${line(tr('immuneTo'),immune,'0×')}</div>
-    </div>
-  </section>
-  <section style="display:flex;flex-direction:column;gap:12px"><h2 class="h2" style="margin:0">${tr('fullTable')}</h2>
-    <div class="legend"><span><i class="sw" style="background:var(--good-bg);color:var(--good)">2</i>${tr('lgSe')}</span><span><i class="sw" style="background:var(--bad-bg);color:var(--bad)">½</i>${tr('lgNve')}</span><span><i class="sw" style="background:var(--ink);color:var(--bg)">0</i>${tr('lgImm')}</span><span>${tr('lgNormal')}</span></div>
+  return `<section class="pickhead"><h1 class="h1" tabindex="-1" data-first>${tr('study')}</h1><p class="lede">${tr('studyLede')}</p></section>
+  <div class="chips">${chips}</div>
+  <div class="plate big">${sp(ty)}</div>
+  <div class="cols">
+    <div class="panel grp"><h3>${tr('attackingWith',badge(ty))}</h3>${line(tr('seLine'),c.se,'2×')}${line(tr('nveLine'),c.nve,'½×')}${line(tr('immLine'),c.imm,'0×')}</div>
+    <div class="panel grp"><h3>${tr('defendingAs',badge(ty))}</h3>${line(tr('weakTo'),weakTo,'2×')}${line(tr('resists'),resists,'½×')}${line(tr('immuneTo'),immune,'0×')}</div>
+  </div>
+  <section style="display:flex;flex-direction:column;gap:12px"><h2 class="h2">${tr('fullTable')}</h2>
+    <div class="legend"><span><i class="sw2" style="background:var(--good-bg);color:var(--good)">2</i>${tr('lgSe')}</span><span><i class="sw2" style="background:var(--bad-bg);color:var(--bad)">½</i>${tr('lgNve')}</span><span><i class="sw2" style="background:var(--ink);color:var(--bg)">0</i>${tr('lgImm')}</span><span>${tr('lgNormal')}</span></div>
     <div class="scroll">${h}</div></section>`;
 }
 
@@ -509,11 +624,13 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]');
   if(!el||el.disabled)return;
   const a=el.dataset.act,v=el.dataset.val;
-  if(a==='home'){S.screen='home';render();window.scrollTo(0,0);}
-  else if(a==='study'){S.screen='study';render();window.scrollTo(0,0);}
+  if(a!=='clear'){S.clearArm=false;S.cleared=false;}
+  if(a==='go')go(v);
+  else if(a==='back')go(BACK[S.screen]||'menu');
+  else if(a==='legal')go('how','legal');
   else if(a==='lang'){setLang(v);S.focus=`[data-act="lang"][data-val="${v}"]`;render();}
-  else if(a==='start')start(v);
   else if(a==='diff'){S.diff=v;savePrefs();S.focus=`[data-act="diff"][data-val="${v}"]`;render();}
+  else if(a==='start')start(v);
   else if(a==='ans')answer(v);
   else if(a==='toggle'){
     if(S.answered)return;
@@ -523,12 +640,19 @@ document.addEventListener('click',e=>{
   else if(a==='verify')verify();
   else if(a==='next')next();
   else if(a==='studytype'){S.study=v;S.focus=`[data-act="studytype"][data-val="${v}"]`;render();}
+  else if(a==='clear'){
+    if(!S.clearArm){S.clearArm=true;S.cleared=false;}
+    else{setBest({});S.clearArm=false;S.cleared=true;}
+    S.focus='[data-act="clear"]';render();
+  }
 });
 document.addEventListener('change',e=>{
   if(e.target&&e.target.id==='hide'){S.hide=e.target.checked;savePrefs();}
 });
 document.addEventListener('keydown',e=>{
-  if(S.screen!=='play'||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.key==='Escape'&&S.screen!=='menu'){go(BACK[S.screen]||'menu');return;}
+  if(S.screen!=='play')return;
   const q=S.qs[S.i];
   if(e.key==='Enter'){
     if(S.answered){e.preventDefault();next();}
