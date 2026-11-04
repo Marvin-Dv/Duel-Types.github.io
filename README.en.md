@@ -62,7 +62,7 @@ The **Study types** screen shows, for each of the 18 types, what it beats, what 
 ## Technical details
 
 - Plain HTML, CSS and JavaScript, in three files (`index.html`, `css/style.css` and `js/app.js`). No framework, no build step and no dependencies.
-- The only external request is for the Big Shoulders Display and Albert Sans fonts from Google Fonts. Without a connection, the page falls back to system fonts.
+- The only external request is for the `Big Shoulders Display` and `Albert Sans` fonts from Google Fonts. Without a connection, the page falls back to system fonts.
 - Automatic light and dark themes, following the system preference.
 - Responsive layout, designed for phones and desktops.
 - Preferences, language and best scores are stored in the browser's `localStorage`. No data is sent to any server.
