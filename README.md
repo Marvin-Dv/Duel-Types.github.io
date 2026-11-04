@@ -62,7 +62,7 @@ A tela **Estudar tipos** mostra, para cada um dos 18 tipos, o que ele vence, o q
 ## Detalhes técnicos
 
 - HTML, CSS e JavaScript puros, em três arquivos (`index.html`, `css/style.css` e `js/app.js`). Sem framework, sem build e sem dependências.
-- A única requisição externa é a das fontes Big Shoulders Display e Albert Sans, pelo Google Fonts. Sem conexão, a página usa as fontes do sistema.
+- A única requisição externa é a das fontes `Big Shoulders Display` e `Albert Sans`, pelo Google Fonts. Sem conexão, a página usa as fontes do sistema.
 - Tema claro e escuro automáticos, conforme a preferência do sistema.
 - Layout responsivo, pensado para celular e computador.
 - Preferências, idioma e recordes ficam no `localStorage` do navegador. Nenhum dado é enviado a servidor.
