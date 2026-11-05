@@ -68,19 +68,6 @@ A tela **Estudar tipos** mostra, para cada um dos 18 tipos, o que ele vence, o q
 - Preferências, idioma e recordes ficam no `localStorage` do navegador. Nenhum dado é enviado a servidor.
 - A tabela de tipos segue a geração atual dos jogos, com os 18 tipos, incluindo Fada.
 
-## Hospedagem
-
-Por ser uma página estática, funciona em qualquer hospedagem gratuita:
-
-- **GitHub Pages:** em *Settings → Pages*, escolha a branch `main` e a pasta raiz.
-- **Cloudflare Pages**, **Netlify** ou **Vercel:** envie o projeto inteiro, mantendo as pastas `css/` e `js/` ao lado do `index.html`.
-
-A página principal precisa se chamar `index.html`, e os caminhos de `css/` e `js/` são relativos a ela.
-
-As meta tags de compartilhamento (título, descrição e imagem de preview) são estáticas e ficam em português, porque os apps de mensagem não executam JavaScript.
-
-Para trocar a imagem de preview, substitua o arquivo `thumb.jpg` ou altere as linhas `og:image` e `twitter:image` do `index.html`. Use sempre o endereço completo do GitHub Pages (por exemplo `https://marvin-dv.github.io/Duel-Types.github.io/thumb.jpg`) e nunca o link do arquivo no `github.com`, que abre a página do arquivo e não a imagem.
-
 ## Estrutura
 
 ```
