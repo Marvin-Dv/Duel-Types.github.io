@@ -103,7 +103,3 @@ This is a free, non-profit fan project. It is not affiliated with, sponsored by,
 Pokémon, the names of Pokémon and types, and all related elements are trademarks and property of Nintendo, Creatures Inc. and GAME FREAK inc. © Nintendo / Creatures Inc. / GAME FREAK inc. All rights reserved to their respective owners.
 
 This game uses no official images, sprites, logos, music or other materials. Names are used only to identify the characters, for educational purposes.
-
-## License
-
-The code in this repository may be licensed however you prefer (for example, MIT). The code license does not cover the trademarks, names and intellectual property of Nintendo, Creatures Inc. and GAME FREAK inc.
