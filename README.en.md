@@ -68,19 +68,6 @@ The **Study types** screen shows, for each of the 18 types, what it beats, what 
 - Preferences, language and best scores are stored in the browser's `localStorage`. No data is sent to any server.
 - The type chart follows the current generation of the games, with all 18 types, including Fairy.
 
-## Hosting
-
-Since it is a static page, it works on any free host:
-
-- **GitHub Pages:** in *Settings → Pages*, choose the `main` branch and the root folder.
-- **Cloudflare Pages**, **Netlify** or **Vercel:** upload the whole project, keeping the `css/` and `js/` folders next to `index.html`.
-
-The main page must be named `index.html`, and the `css/` and `js/` paths are relative to it.
-
-The sharing meta tags (title, description and preview image) are static and written in Portuguese, because messaging apps do not run JavaScript.
-
-To change the preview image, replace the `thumb.jpg` file or edit the `og:image` and `twitter:image` lines in `index.html`. Always use the full GitHub Pages address (for example `https://marvin-dv.github.io/Duel-Types.github.io/thumb.jpg`) and never the file's `github.com` link, which opens the file page rather than the image.
-
 ## Structure
 
 ```
