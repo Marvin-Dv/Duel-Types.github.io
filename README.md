@@ -103,7 +103,3 @@ Este é um projeto de fãs, gratuito e sem fins lucrativos. Não é afiliado, pa
 Pokémon, os nomes dos Pokémon e dos tipos e os demais elementos relacionados são marcas registradas e propriedade da Nintendo, Creatures Inc. e GAME FREAK inc. © Nintendo / Creatures Inc. / GAME FREAK inc. Todos os direitos reservados aos seus respectivos titulares.
 
 Este jogo não usa imagens, sprites, logotipos, músicas nem outros materiais oficiais. Os nomes são citados apenas para identificar os personagens, com finalidade educativa.
-
-## Licença
-
-O código deste repositório pode ser licenciado como você preferir (por exemplo, MIT). A licença do código não abrange as marcas, os nomes e a propriedade intelectual da Nintendo, da Creatures Inc. e da GAME FREAK inc.
